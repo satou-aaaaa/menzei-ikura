@@ -40,9 +40,9 @@ function judge(q) {
   let sum = 0;
   for (const it of items) {
     const v = yen(it), cnt = +((/(\d+)(個|本)$/.exec(it.trim()) || [])[1] || 1), per = /1(個|本)[\d,]+円/.test(it);
-    const total = per ? v * cnt : v;
-    if (!per && /^1(個|本|台)/.test(it.trim()) && v > 200000) return [2, "sonota"];
-    if (per && total <= 10000) continue; // 1品目の合計が1万円以下は原則免税
+    const total = per ? v * cnt : v, unit = per ? v : /合わせて/.test(it) ? 0 : v;
+    if (unit > 200000) return [2, "sonota"]; // 1個で20万円をこえる物（書き順によらない）
+    if (total <= 10000) continue; // 1品目の合計が1万円以下は原則免税（単価の書き方によらない）
     sum += total;
   }
   return [sum <= 200000 ? 0 : 1, "sonota"];
@@ -80,7 +80,7 @@ const FACT = { sake760: "760ml", sake3: "3本", oz28: "約28ml", cologne: "オ�
   check("問題：種類は29（やさしい6・ふつう11・むずかしい12）", G.KINDS.length === 29 && [0, 1, 2].map((l) => G.kindsOf(l).length).join() === "6,11,12", [0, 1, 2].map((l) => G.kindsOf(l).length).join());
   check("答えは4つの区分と4つの決まりが全部出る・しくみの問題は全部表にある", ORDER.every((o) => G.KINDS.some((k) => k.grp && k.ans === o)) && ["sake", "tabako", "kosui", "sonota"].every((g) => G.KINDS.some((k) => k.grp === g)) && JSON.stringify(G.LEVELS) === JSON.stringify(ORDER) && Object.keys(FACT).every((id) => G.BY[id]));
   check("むずかしいに、ちょうどの数（酒類3本・葉巻50本・合計20万円）と、1万円以下の品目・6歳未満・1個20万円超の問題がある", ["sake3just", "sigar50", "choco", "child5", "watch21"].every((id) => G.BY[id] && G.BY[id].lv === 2));
-  check("自分で書いた判定が、わざとまちがえた荷物を見分ける（判定の検査）", judge("30歳の人の荷物はワイン4本（1本750ml）。　免税になる？")[0] === 1 && judge("30歳の人の荷物はかばん20万円と、1本5,000円のネクタイ2本。　免税になる？")[0] === 0 && judge("30歳の人の荷物はかばん21万円と、1本5,000円のネクタイ2本。　免税になる？")[0] === 1 && judge("30歳の人の荷物は1本25万円の腕時計。　免税になる？")[0] === 2 && judge("19歳の人の荷物は葉巻たばこ2本。　免税になる？")[0] === 3 && judge("30歳の人の荷物は香水1びん（60ml）。　免税になる？")[0] === 1);
+  check("自分で書いた判定が、わざとまちがえた荷物を見分ける（判定の検査）", judge("30歳の人の荷物はワイン4本（1本750ml）。　免税になる？")[0] === 1 && judge("30歳の人の荷物はかばん20万円と、1本5,000円のネクタイ2本。　免税になる？")[0] === 0 && judge("30歳の人の荷物はかばん21万円と、1本5,000円のネクタイ2本。　免税になる？")[0] === 2 && judge("30歳の人の荷物はカメラ25万円とくつ8万円。　免税になる？")[0] === 2 && judge("30歳の人の荷物は服20万円とチョコ9,000円。　免税になる？")[0] === 0 && judge("30歳の人の荷物はカメラ15万円とくつ8万円。　免税になる？")[0] === 1 && judge("30歳の人の荷物は1本25万円の腕時計。　免税になる？")[0] === 2 && judge("19歳の人の荷物は葉巻たばこ2本。　免税になる？")[0] === 3 && judge("30歳の人の荷物は香水1びん（60ml）。　免税になる？")[0] === 1);
   const longWhy = [], longLook = [], longOpt = [];
   for (const k of G.KINDS) { if ([...k.why].length > 100) longWhy.push(k.id); if ([...k.look].length > 45 || [...k.key].length > 60) longLook.push(k.id); for (let s = 0; s < 200; s++) { const P = G.make(`${k.id}|len${s}`); for (const o of [...P.opts, P.q]) if ([...o].length > 60) longOpt.push(`${k.id}:${o}`); } }
   check("説明は100字以内・ヒントは45字・60字以内・1行は60字以内（やさしい日本語。一文を短く）", !longWhy.length && !longLook.length && !longOpt.length, longWhy.concat(longLook, longOpt.slice(0, 3)).join(","));
