@@ -15,7 +15,7 @@ import { checkDepth } from "./depth-check.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const results = [];
 const check = (name, ok, detail = "") => results.push({ name, ok: !!ok, detail: String(detail).slice(0, 400) });
-const firstClose = async (q) => { if (await q.locator("#howto[open]").count()) await q.click("#howto-ok"); if (await q.locator("#core-coach").count()) { await q.evaluate(() => Core.coach.leave()); await q.waitForTimeout(100); } }; // はじめての練習の吹き出しをやめてホームへ（sync-template の migrateFirstQa が足した）
+const firstClose = async (q) => { if (await q.locator("#howto[open]").count()) await q.click("#howto-ok"); if (await q.evaluate(() => !!(window.Core && Core.coach && Core.coach.active()))) { await q.evaluate(() => { Core.coach.leave(); scrollTo(0, 0); }); await q.waitForTimeout(100); } }; // はじめての練習の吹き出しをやめてホームへ（sync-template の migrateFirstQa が足した）
 const G = createRequire(import.meta.url)(path.join(root, "data.js"));
 
 const PINS = "sake2:0.3.1.1:2.1,sake760:0:0.4,kosui1:1.2.1.0:3.2.1,tabakoteen:2.1.0.0:2.0.1,sake4:0.3.0.2:3.0.2,sake3just:2.3.2.1:1.2.3,h30:1:0.2.4,heat10:1:1.4.2;sake2:1.2.0.2:2.3,sake760:0:1.0,goukei28:0.1.2.1:2.0.3,sigaro:0:3.2.4,gassan:1:2.0.4,sonota20:1:2.0.4,tabako250:0:3.1.4,sigar50:1.1.1.2:2.3.1;sake760:2:0.4,sake2:1.0.1.1:2.3,kosui1:2.3.0.2:2.1.3,kami2:1.0.2.1:3.0.2,sonota20:0:2.3.1,sigar50:0.3.0.2:2.3.1,heat12:0.1.2.1:2.3.0,sake3just:0.1.0.1:3.2.1"; // 過去の日の問題の印（変わったら過去の日の問題が変わった印。種類・言い方は足すだけでも変わる）
